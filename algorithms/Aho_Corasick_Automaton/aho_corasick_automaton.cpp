@@ -28,9 +28,9 @@ class Component {
 public:
 	char twig;
 	vector<Component*> arc;
-	vector<Component*> fail; // 실패 링크 ⭐
-	Component() : twig('\0') { arc = {}; fail = {}; }
-	Component(char a) : twig(a) { arc = {}; fail = {}; }
+	Component* fail_arc; 
+	Component() : twig('\0') { arc = {}; fail_arc = {}; }
+	Component(char a) : twig(a) { arc = {}; fail_arc = {}; }
 	Component* find(char a) {
 		for (auto i : arc) {
 			if (i->twig == a) return i;
@@ -64,7 +64,40 @@ public:
 		}
 
 	}
+	void make_failure_route() {
+		Component* temp = root;
+		deque<Component*> deck = {temp};
+		while (!deck.empty()) {
+			
+			Component* ptr = deck.front();deck.pop_front(); //부모노드결정
 
+			for (auto i : ptr->arc) { //자식노드 순회
+				//#1 최초노드로부터 오토마타로 인식 실패 발견시 루트로 돌아간다.
+				if (ptr == temp) { ptr->fail_arc = temp; 
+				for (auto i : ptr->arc) {
+					i->fail_arc = temp;
+					}
+				}
+				else {
+					//#2 부모노드의 실패링크로 이동하고, 자식 중 접미부가 같은 문자인 것을 찾는다.
+					// 못 찾을 경우 이동된 노드에서의 실패링크로 이동한다.
+					Component* fail_moved = ptr->fail_arc;
+					Component* needtodecide;
+					do {
+						needtodecide = fail_moved->find(i->twig);
+						fail_moved = fail_moved->fail_arc;
+					}while (fail_moved != temp && needtodecide == nullptr);
+						
+					if (needtodecide != nullptr) {
+						fail_moved = needtodecide;
+					}
+					i->fail_arc = fail_moved;
+					cout << i->twig<<"#" << fail_moved->twig << "#"<< endl;
+				}
+				deck.push_back(i);
+			}
+		}
+	}
 	void print_automata(Component* temp) {
 	
 		for (int i = 0; i < temp->arc.size(); i++) {
@@ -74,6 +107,18 @@ public:
 			if (temp->arc[i] != nullptr)print_automata(temp->arc[i]);
 		}
 		
+
+	}
+	void print_node(Component* temp) {
+
+		cout <<"Twig :" <<temp->twig << endl;
+		cout << "연결된 노드 :";
+		for (auto i : temp->arc) {
+			cout << i->twig << " ";
+		}cout << endl;
+		cout << "실패 아크 :";
+		cout << temp->fail_arc->twig << endl;
+
 
 	}
 
@@ -165,11 +210,16 @@ int main() {
 	//endo_nuclease(30, 500, 10000, "helloDna.txt", "shortreads.txt");
 	//import_short_reads("shortreads.txt");
 	automata a;
-	a.make_automaton("hi");
-	a.make_automaton("ha");
-	a.make_automaton("haha");
-	a.make_automaton("hihi");
-	a.make_automaton("ahihi");
+	
+	a.make_automaton("achy");
+	a.make_automaton("cache");
+	a.make_automaton("chef");
+	a.make_automaton("he");
+
+
 	a.print_automata(a.root);
+	a.make_failure_route();
+
+	//a.print_node(a.root->arc[0]);
 	return 0;
 }
