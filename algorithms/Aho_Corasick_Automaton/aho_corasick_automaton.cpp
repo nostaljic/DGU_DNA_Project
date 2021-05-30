@@ -48,14 +48,14 @@ public:
 	void make_automaton(string short_read) {
 		Component* temp = root;
 		int read_length = short_read.size();
-		//cout << temp->twig << endl;
+		cout << temp->twig << endl;
 		for (int i = 0; i < read_length; i++) {
 			Component* ptr = temp->find(short_read[i]);
 			if (ptr == nullptr) {
 				Component* newnode = new Component(short_read[i]);
 				temp->arc.push_back(newnode);
 				temp = newnode;
-				//cout << temp->twig << endl;
+				cout << temp->twig << endl;
 			}
 			else if (ptr != nullptr) {
 				cout << "존재함" << endl;
@@ -133,6 +133,7 @@ auto advanced_rand = [](int range) {
 	auto generator = bind(distribution, engine);
 	return generator();
 };
+
 auto make_string_file = [](int fileLength, string filePath) {
 	ofstream dna(filePath);
 	string fileDnaString;
@@ -155,6 +156,7 @@ auto make_string_file = [](int fileLength, string filePath) {
 	dna << fileDnaString;
 	dna.close();
 };
+
 auto make_my_dna = [](int subSequenceLength, int short_reads_count, int snp_count, int fileLength, string refDnaPath, string myDnaPath) {
 
 	ifstream refDNA(refDnaPath);
@@ -173,6 +175,7 @@ auto make_my_dna = [](int subSequenceLength, int short_reads_count, int snp_coun
 	refDNA.close();
 	myDNA.close();
 };
+
 auto endo_nuclease = [](int subSequenceLength, int shortReadsCounter, int fileLength, string filePath, string shortReadsPath) {
 
 	ifstream dna(filePath);
@@ -205,21 +208,26 @@ auto import_short_reads = [](string filePath) {
 
 int main() {
 	
-	//make_string_file(10000, "helloDna.txt");
-	//make_my_dna(30,500,2,10000,"helloDna.txt", "refDna.txt");
-	//endo_nuclease(30, 500, 10000, "helloDna.txt", "shortreads.txt");
-	//import_short_reads("shortreads.txt");
+	make_string_file(10000, "helloDna.txt");
+	make_my_dna(30,500,2,10000,"helloDna.txt", "refDna.txt");
+	endo_nuclease(30, 500, 10000, "helloDna.txt", "shortreads.txt");
+	import_short_reads("shortreads.txt");
 	automata a;
+
+	//a.make_automaton("achy");
+	//a.make_automaton("cache");
+	//a.make_automaton("chef");
+	//a.make_automaton("he");
 	
-	a.make_automaton("achy");
-	a.make_automaton("cache");
-	a.make_automaton("chef");
-	a.make_automaton("he");
+	//for (auto i : short_reads_container) {
+	//	a.make_automaton(i);
+	//}
+
+	//a.print_automata(a.root);
+	//a.make_failure_route();
 
 
-	a.print_automata(a.root);
-	a.make_failure_route();
 
-	//a.print_node(a.root->arc[0]);
+	a.print_node(a.root->arc[1]);
 	return 0;
 }
