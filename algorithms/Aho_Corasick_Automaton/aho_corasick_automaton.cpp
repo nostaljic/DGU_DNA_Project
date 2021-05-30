@@ -26,6 +26,7 @@ vector<string> short_reads_container;
 vector<int> randomSeed = { 7,13,17,23 };
 class Component {
 public:
+	int length = 0;
 	char twig;
 	vector<Component*> arc;
 	Component* fail_arc; 
@@ -40,7 +41,7 @@ public:
 };
 class automata {
 public:
-	string maxPrefix;
+
 	Component* root;
 	automata() {
 		root = new Component('$');
@@ -50,6 +51,7 @@ public:
 		int read_length = short_read.size();
 		cout << temp->twig << endl;
 		for (int i = 0; i < read_length; i++) {
+			temp->length = i;
 			Component* ptr = temp->find(short_read[i]);
 			if (ptr == nullptr) {
 				Component* newnode = new Component(short_read[i]);
@@ -58,7 +60,7 @@ public:
 				cout << temp->twig << endl;
 			}
 			else if (ptr != nullptr) {
-				cout << "존재함" << endl;
+				//cout << "존재함" << endl;
 				temp = ptr;
 			}
 		}
@@ -92,12 +94,14 @@ public:
 						fail_moved = needtodecide;
 					}
 					i->fail_arc = fail_moved;
-					cout << i->twig<<"#" << fail_moved->twig << "#"<< endl;
+					//cout << i->twig<<"#" << fail_moved->twig << "#"<< endl;
 				}
 				deck.push_back(i);
 			}
 		}
 	}
+
+
 	void print_automata(Component* temp) {
 	
 		for (int i = 0; i < temp->arc.size(); i++) {
@@ -110,7 +114,7 @@ public:
 
 	}
 	void print_node(Component* temp) {
-
+		cout <<"index : "<<temp->length <<endl;
 		cout <<"Twig :" <<temp->twig << endl;
 		cout << "연결된 노드 :";
 		for (auto i : temp->arc) {
@@ -123,7 +127,48 @@ public:
 	}
 
 };
-deque<char> aho_corasick_automata = {};
+
+auto automaton_dna_reconstruction = [](int subSequenceLength, int snp_count, int fileLength, string refFilePath, string reconstructionFilePath, automata aca) {
+	
+	ofstream reconstructed_dna(reconstructionFilePath);
+	string reconstructed; reconstructed.resize(fileLength + 1);
+	//cout << reconstructed << endl;
+	ifstream RefDna(refFilePath);
+	string refDNA;
+	getline(RefDna, refDNA);
+
+
+	for (int i = 0; i < fileLength - subSequenceLength; i += subSequenceLength) {
+		Component* temp = aca.root;
+		Component* ptr;
+		string tempstr; tempstr.resize(30);
+		int flag = 0;
+		for (int j = 0; j < subSequenceLength; j++) {
+			
+			 do {
+				 ptr = temp->find(refDNA[i + j]);
+				 if (ptr != nullptr) {
+					 tempstr[j]= ptr->twig;
+					 
+					 temp = ptr;
+					 flag++;
+					 break;
+				 }
+				 else {
+					 temp = temp->fail_arc;
+					 
+				 }
+				 
+			 } while (ptr == nullptr);
+			 cout << j << " # " << tempstr << endl;
+		}
+		if (flag == 30) {
+			
+		}
+		
+	}
+	//subSequenceLength==automata의 arc length
+};
 
 //난수 생성기 (松本眞のアルゴリズム)
 auto advanced_rand = [](int range) {
@@ -201,32 +246,27 @@ auto import_short_reads = [](string filePath) {
 		short_reads_container.push_back(short_read);
 	}
 
-	for (auto i : short_reads_container) {
+	/*for (auto i : short_reads_container) {
 		cout << i << endl;
-	}
+	}*/
 };
 
 int main() {
 	
-	make_string_file(10000, "helloDna.txt");
-	make_my_dna(30,500,2,10000,"helloDna.txt", "refDna.txt");
-	endo_nuclease(30, 500, 10000, "helloDna.txt", "shortreads.txt");
-	import_short_reads("shortreads.txt");
+	//make_string_file(10000, "helloDna.txt");
+	//make_my_dna(30,500,2,10000,"helloDna.txt", "refDna.txt");
+	//endo_nuclease(30, 500, 10000, "helloDna.txt", "shortreads.txt");
+	//import_short_reads("shortreads.txt");
 	automata a;
-
-	//a.make_automaton("achy");
-	//a.make_automaton("cache");
-	//a.make_automaton("chef");
-	//a.make_automaton("he");
 	
-	//for (auto i : short_reads_container) {
-	//	a.make_automaton(i);
-	//}
-
-	//a.print_automata(a.root);
-	//a.make_failure_route();
+	a.make_automaton("achy");
+	a.make_automaton("cache");
+	a.make_automaton("chef");
+	a.make_automaton("he");
 
 
+	a.print_automata(a.root);
+	a.make_failure_route();
 
 	a.print_node(a.root->arc[1]);
 	return 0;
