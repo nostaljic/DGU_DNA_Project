@@ -1,0 +1,4 @@
+﻿  aho_corasick_automaton.cpp
+E:\Users\Scorpion\Documents\DGU_DNA_Project\algorithms\Aho_Corasick_Automaton\aho_corasick_automaton.cpp(103,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+E:\Users\Scorpion\Documents\DGU_DNA_Project\algorithms\Aho_Corasick_Automaton\aho_corasick_automaton.cpp(106,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  Aho_Corasick_Automaton.vcxproj -> E:\Users\Scorpion\Documents\DGU_DNA_Project\algorithms\Aho_Corasick_Automaton\Debug\Aho_Corasick_Automaton.exe
