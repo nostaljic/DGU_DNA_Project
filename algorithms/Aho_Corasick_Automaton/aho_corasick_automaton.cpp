@@ -28,7 +28,7 @@ vector<int> randomSeed = { 7,13,17,23 };
 
 class Component {
 public:
-	int length = 0;
+	int length = 0; 
 	char twig;
 	string shortread;
 	vector<Component*> arc;
@@ -185,29 +185,10 @@ auto automaton_dna_reconstruction = [](int subSequenceLength, int snp_count, int
 	//subSequenceLength==automata의 arc length
 };
 
-//Component* inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength, string ref, int current, int mis_match, int snip_count) {
-//	if (FINSH_DFS == true) {
-//		return nullptr;
-//	}
-//	if (ptr->length == subSequenceLength) {
-//		FINSH_DFS = true;
-//		return ptr;
-//	}
-//	visited[start] = true;
-//	for (int i = 0; i < ptr->arc.size(); i++) {
-//		Component* temp = ptr->arc[i];
-//		if (temp != nullptr && ref[current + 1] != temp->twig) {
-//			mis_match++;
-//			if (mis_match > snip_count) return nullptr;
-//			break; 
-//		}
-//		if (visited[temp->length] == false) {
-//			inter_DFS(temp, visited, temp->length, subSequenceLength, ref, current+1, mis_match, snip_count);
-//		}
-//	}
-//	return nullptr;
-//};
-
+// DFS 함수
+// parameter info
+// current : 현재 확인할 위치
+// flag : dfs 성공 여부
 void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength, string &ref, int current, int mis_match, int snip_count, bool &flag) {
 
 	// find shortread AND update Reference
@@ -225,16 +206,17 @@ void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength,
 
 	visited[start] = true;
 	int save = mis_match;
+
 	// 다음 노드 확인
 	for (int i = 0; i < ptr->arc.size(); i++) {
 		Component* temp = ptr->arc[i];
 		//cout << "check in dfs : " << ref[current] << " " << temp->twig <<" "<< mis_match<< endl;
 
+		// 해당 노드 값이 reference와 다를 때 
 		if (ref[current] != temp->twig) {
 			mis_match++;
-			//cout << "missmatch :" << mis_match << endl;
 			if (mis_match > snip_count) {
-				//cout << "out ouf dfs" << endl;
+				// 허용 mis_match를 초과했을 때 더이상 탐색 x
 				mis_match = save;
 				continue;
 			}
@@ -246,10 +228,16 @@ void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength,
 			//cout << "check in dfs : " << ref[current] << " " << temp->twig <<" "<< mis_match<< endl;
 			inter_DFS(temp, visited, temp->length, subSequenceLength, ref, current + 1, mis_match, snip_count, flag);
 		}
-		mis_match = save;
+		mis_match = save; // mismatch정보 초기화
 	}
 };
 
+// MYDNA reconstruct 함수
+// 목표 : reference를 이용해 shortread 오토마타 상에서 자유롭게 돌아다니면서 shortread를 찾아내고 그 결과를 reference에 반영하여 reconstruct
+// Case #1. no missmatch & find shortread     => reference에 반영
+// Case #2. mis_match 존재 => 1. 허용 mis_match내에서 자식 트라이를 DFS를 통해 탐색하여 shortread찾기 2. 만약 dfs로 못찾을 경우 faillink이용해 jump
+// Case #3. mis_match 허용치 초과 => faillink이용해 새로운 탐색시작
+// Case #4. 만약 root로 jump된다면 while(1)문 빠져나오고 새로운 i로 탐색 시작
 auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, int fileLength, string refFilePath, string reconstructionFilePath, automata aca) {
 
 	ofstream reconstructed_dna(reconstructionFilePath);
@@ -259,25 +247,30 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 	string reconstructDNA;
 	getline(RefDna, reconstructDNA);
 
-	int mis_match = 0;
-	int position = 0;
-	int percent = 0;
+	int mis_match = 0; // mis_match count
+	int position = 0; // reference에서 현재 확인하고 있는 DNA sequence 위치
+					// ex) i + position => i부터 시작하는 reference의 현재 보는 char 위치(=position)
+
 	for (int i = 0; i < fileLength - subSequenceLength; i++) {
 		Component* temp = aca.root;
 		Component* ptr = nullptr;
 		string find_shortread;
-		mis_match = 0;
-		position = 0;
+
+		// 새로운 탐색 시작 초기화
+		mis_match = 0; 
+		position = 0;   
+
+		// aho_corasick 오토마타 상에서 shortread 찾는 while문
 		while(1){
 
 			if (ptr != nullptr && ptr->twig == '$') {
+				// if ptr == root 다음 reference DNA index부터 시작
 				// root를 만나면 break;
 				break;
 			}
 
-			// error 가능성 o (nullptr)
+			// find shortRead 
 			if (ptr != nullptr && ptr->length == subSequenceLength) {
-				// find shortRead
 				find_shortread = ptr->shortread;
 
 				// ShortRead ReferenceDNA에 update
@@ -285,40 +278,46 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 					//cout << "test : " <<i <<" " << reconstructDNA[i + a] << " " << find_shortread[a] <<endl;
 					reconstructDNA[i + a] = find_shortread[a];
 				}
-			//	cout <<"mis_match : "<<mis_match<<" "<<position<< endl<<endl;
-				i += (subSequenceLength - 1); // break 이후 i++ 이후 i < fileLength - subSequenceLength test 하기 때문
+				//	cout <<"mis_match : "<<mis_match<<" "<<position<< endl<<endl;
+				i += (subSequenceLength - 1); // break 이후 while문 나간 후 for문의 i++ 이후 i < fileLength - subSequenceLength test 하기 때문
 				break;
 			}
 
 
-			if (i + position > fileLength - subSequenceLength) break;
+			// temp->find()를 통해 reference의 해당 노드를 오토마타 상에서 찾기
+			if (i + position > fileLength - subSequenceLength) break; 			// string index overflow 차단
 			ptr = temp->find(reconstructDNA[i + position]);
-			// find success
+
+
+			// find의 해당 문자가 존재하는 경우
 			if (ptr != nullptr) {
 				temp = ptr;
 				position++;
 			}
 			else if (ptr == nullptr && mis_match < snp_count) {
-				// 스닙일 가능성이 있다.
-				//dfs
-				//mis_match++;
-				//position++;
+				// find결과 해당 문자 못찾았지만 mis_match < snp_count라 스닙일 가능성 존재하여 DFS로 자식 전체 탐색 진행
+
 				bool* visited = new bool[subSequenceLength + 1];
 				memset(visited, false, sizeof(visited));
-				bool flag = false;
+				
+				bool flag = false; // flag : dfs 찾으면 끝내도록
+
+				// DFS
 				inter_DFS(temp, visited, temp->length, subSequenceLength, reconstructDNA,i+position, mis_match, snp_count, flag);
 				
-				// goto faillink
+				// DFS 결과 찾으면 flag == true
 				if (flag == false) {
+					// goto faillink ( faillink에서 새로운 탐색 )
 					temp = temp->fail_arc;
 					if (temp == nullptr) break;
-					mis_match = 0;
-					i = i + position - temp->length;
-					position = temp->length;
+					mis_match = 0;	// 초기화 
+					i = i + position - temp->length; // i의 위치 변경 mismatch position과 fail link를 통해 위치 연산
+					position = temp->length; // position을 fail link의 length로 변경해 바로 다음 노드 부터 탐색할 수 있도록 
 				}
 				else {
-					// 내부 dfs 진행 끝
-					i += (subSequenceLength - 1);
+					// 내부 dfs shortread 탐색 성공
+					// 다음 subSequenceLength부터 새로운 탐색 시작하기 위해 i 증가
+					i += (subSequenceLength - 1); 
 				}
 			}
 			else {
@@ -330,8 +329,8 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 				position = temp->length; 
 			}
 		}
-			// if ptr == root 다음 reference DNA index부터 시작
 	}
+	// reconstruct 끝
 	reconstructed_dna << reconstructDNA;
 	return reconstructDNA;
 };
@@ -416,6 +415,7 @@ auto import_short_reads = [](string filePath) {
 	}*/
 };
 
+// Brute Force DNA 비교 결과
 auto reconstruct_precision = [](string reconstruct, string mydna) {
 	int miss_count = 0;
 	int dna_size = reconstruct.size();
@@ -427,7 +427,7 @@ auto reconstruct_precision = [](string reconstruct, string mydna) {
 	cout << "MYDNA 복원결과 : " << double(dna_size - miss_count) * 100 / dna_size << "%입니다" << endl;
 };
 
-
+// get string From File
 auto loadMyDna = [](string filename) {
 	string mydna;
 	ifstream loadDNA;
@@ -438,17 +438,19 @@ auto loadMyDna = [](string filename) {
 
 int main() {
 	// 30 50 2 1000
-	//make_string_file(1000000, "helloDna.txt");
-	//make_my_dna(30, 40000, 3, 1000000, "helloDna.txt", "refDna.txt");
-	//endo_nuclease(30, 40000, 1000000, "refDna.txt", "shortreads.txt");
-	make_string_file(1000, "helloDna.txt");
-	make_my_dna(30, 50, 3, 1000, "helloDna.txt", "refDna.txt");
-	endo_nuclease(30, 50, 1000, "refDna.txt", "shortreads.txt");
+	make_string_file(1000000, "helloDna.txt");
+	make_my_dna(30, 40000, 3, 1000000, "helloDna.txt", "refDna.txt");
+	endo_nuclease(30, 40000, 1000000, "refDna.txt", "shortreads.txt");
+	//make_string_file(1000, "helloDna.txt");
+	//make_my_dna(30, 50, 3, 1000, "helloDna.txt", "refDna.txt");
+	//endo_nuclease(30, 50, 1000, "refDna.txt", "shortreads.txt");
 	import_short_reads("shortreads.txt");
 	automata ACA;
 	string reconstruct;
 	string mydna;
 	string reference;
+
+	// ShortRead로 오토마타 생성
 	for (auto i : short_reads_container) {
 		ACA.make_automaton(i);
 	}
@@ -456,11 +458,15 @@ int main() {
 
 	reference = loadMyDna("helloDna.txt");
 
-	ACA.print_node(ACA.root->arc[0]->arc[0]);//0 1 2 
+	// ACA.print_node(ACA.root->arc[0]->arc[0]);//0 1 2 
 	cout << "Automata 구성 완료" << endl;
 	//automaton_dna_reconstruction(30, 2, 1000, "refDna.txt", "reconstruction.txt", ACA);
-	//reconstruct = automaton_dna_reconstruction_v1(30, 3, 1000000, "helloDna.txt", "reconstruction.txt", ACA);
-	reconstruct = automaton_dna_reconstruction_v1(30, 3, 1000, "helloDna.txt", "reconstruction.txt", ACA);
+	//reconstruct = automaton_dna_reconstruction_v1(30, 3, 1000, "helloDna.txt", "reconstruction.txt", ACA);
+	reconstruct = automaton_dna_reconstruction_v1(30, 3, 1000000, "helloDna.txt", "reconstruction.txt", ACA);
+
+	// 복원율 확인 
+	// 1. My DNA vs Reference 
+	// 2. My DNA vs reconstruct myDNA
 	mydna = loadMyDna("refDna.txt");
 	cout << "My DNA vs Reference" << endl;
 	reconstruct_precision(reference, mydna);
