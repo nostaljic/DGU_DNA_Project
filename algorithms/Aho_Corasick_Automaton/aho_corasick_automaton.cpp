@@ -59,7 +59,7 @@ auto automaton_dna_reconstruction = [](int subSequenceLength, int snp_count, int
 // parameter info
 // current : 현재 확인할 위치
 // flag : dfs 성공 여부
-void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength, string& ref, int current, int mis_match, int snip_count, bool& flag) {
+void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength, string& ref, string& rec, int current, int mis_match, int snip_count, bool& flag) {
 
 	// find shortread AND update Reference
 	if (ptr->length == subSequenceLength && flag == false) {
@@ -67,13 +67,13 @@ void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength,
 		string shortread = ptr->shortread;
 		int index = current - subSequenceLength;
 		for (int i = 0; i < subSequenceLength; i++) {
-			cout << "==============dfs change : " << ref[index + i] << "  " << shortread[i] << endl;
-			ref[index + i] = shortread[i];
+			//cout << "==============dfs change : " << ref[index + i] << "  " << shortread[i] << endl;
+			rec[index + i] = shortread[i];
 		}
 		// 6.01 해당 shortread 방문
 		ptr->visited = true;
 		FIND++;
-		cout << "\n";
+		//cout << "\n";
 		return;
 	}
 
@@ -99,7 +99,7 @@ void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength,
 		// #case 2 : find
 		if (visited[temp->length] == false) {
 			//cout << "check in dfs : " << ref[current] << " " << temp->twig <<" "<< mis_match<< endl;
-			inter_DFS(temp, visited, temp->length, subSequenceLength, ref, current + 1, mis_match, snip_count, flag);
+			inter_DFS(temp, visited, temp->length, subSequenceLength, ref,rec, current + 1, mis_match, snip_count, flag);
 		}
 		mis_match = save; // mismatch정보 초기화
 	}
@@ -115,16 +115,14 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 
 	ofstream reconstructed_dna(reconstructionFilePath);
 	string reconstructed; reconstructed.resize(fileLength + 1);
-	//cout << reconstructed << endl;
 	ifstream RefDna(refFilePath);
-	string reconstructDNA;
-	getline(RefDna, reconstructDNA);
+	string refDNA;	getline(RefDna, refDNA);
 
 	int mis_match = 0; // mis_match count
 	int position = 0; // reference에서 현재 확인하고 있는 DNA sequence 위치
 					// ex) i + position => i부터 시작하는 reference의 현재 보는 char 위치(=position)
 
-	for (int i = 0; i < fileLength - subSequenceLength; i++) {
+	for (int ref_index = 0; ref_index < fileLength - subSequenceLength; ref_index++) {
 		Component* temp = aca.root;
 		Component* ptr = nullptr;
 		string find_shortread;
@@ -149,21 +147,20 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 				// ShortRead ReferenceDNA에 update
 				for (int a = 0; a < subSequenceLength; a++) {
 					//cout << "test : " <<i <<" " << reconstructDNA[i + a] << " " << find_shortread[a] <<endl;
-					reconstructDNA[i + a] = find_shortread[a];
+					reconstructed[ref_index + a] = find_shortread[a];
 				}
 				//	cout <<"mis_match : "<<mis_match<<" "<<position<< endl<<endl;
 
 				// 6. 01 노드 방문
 				ptr->visited = true;
 				FIND++;
-				i += (subSequenceLength - 1); // break 이후 while문 나간 후 for문의 i++ 이후 i < fileLength - subSequenceLength test 하기 때문
 				break;
 			}
 
 
 			// temp->find()를 통해 reference의 해당 노드를 오토마타 상에서 찾기
-			if (i + position > fileLength - subSequenceLength) break; 			// string index overflow 차단
-			ptr = temp->find(reconstructDNA[i + position]);
+			if (ref_index + position > fileLength - subSequenceLength) break; 			// string index overflow 차단
+			ptr = temp->find(refDNA[ref_index + position]);
 
 
 			// find의 해당 문자가 존재하는 경우
@@ -180,7 +177,7 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 				bool flag = false; // flag : dfs 찾으면 끝내도록
 
 				// DFS
-				inter_DFS(temp, visited, temp->length, subSequenceLength, reconstructDNA, i + position, mis_match, snp_count, flag);
+				inter_DFS(temp, visited, temp->length, subSequenceLength, refDNA, reconstructed, ref_index + position, mis_match, snp_count, flag);
 
 				// DFS 결과 찾으면 flag == true
 				if (flag == false) {
@@ -188,13 +185,11 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 					temp = temp->fail_arc;
 					if (temp == nullptr) break;
 					mis_match = 0;	// 초기화 
-					i = i + position - temp->length; // i의 위치 변경 mismatch position과 fail link를 통해 위치 연산
+					ref_index = ref_index + position - temp->length; // i의 위치 변경 mismatch position과 fail link를 통해 위치 연산
 					position = temp->length; // position을 fail link의 length로 변경해 바로 다음 노드 부터 탐색할 수 있도록 
 				}
 				else {
 					// 내부 dfs shortread 탐색 성공
-					// 다음 subSequenceLength부터 새로운 탐색 시작하기 위해 i 증가
-					i += (subSequenceLength - 1);
 				}
 			}
 			else {
@@ -202,17 +197,15 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 				temp = temp->fail_arc;
 				if (temp == nullptr) break;
 				mis_match = 0;
-				i = i + position - temp->length;
+				ref_index = ref_index + position - temp->length;
 				position = temp->length;
 			}
 		}
 	}
 	// reconstruct 끝
-	reconstructed_dna << reconstructDNA;
-	return reconstructDNA;
+	reconstructed_dna << reconstructed;
+	return reconstructed;
 };
-
-
 
 //난수 생성기 (松本眞のアルゴリズム)
 auto advanced_rand = [](int range) {
@@ -222,6 +215,7 @@ auto advanced_rand = [](int range) {
 	auto generator = bind(distribution, engine);
 	return generator();
 };
+
 auto make_string_file = [](int fileLength, string filePath) {
 	ofstream dna(filePath);
 	string fileDnaString;
@@ -262,18 +256,30 @@ auto make_my_dna = [](int subSequenceLength, int short_reads_count, int snp_coun
 	refDNA.close();
 	myDNA.close();
 };
-auto endo_nuclease = [](int subSequenceLength, int shortReadsCounter, int fileLength, string filePath, string shortReadsPath) {
 
+//균등 분포 서브시퀸스
+auto endo_nuclease = [](int subSequenceLength, int shorReadsCounter, int fileLength, string filePath, string shortReadsPath) {
+	//vector<string> shortReads;
 	ifstream dna(filePath);
 	string fileDnaString;
 	getline(dna, fileDnaString);
 
 	ofstream shortReads(shortReadsPath);
-
-	for (int i = 0; i < shortReadsCounter; i++) {
-		int randomindex = advanced_rand(fileLength - subSequenceLength);
-		shortReads << fileDnaString.substr(randomindex, subSequenceLength); shortReads << '\n';
+	int num_of_short_reads = 0;
+	int sign_flag = 1;
+	int index_of_sub_dna = 0;
+	//int rand_degree = 1;
+	int delim = fileLength / shorReadsCounter;
+	while (num_of_short_reads < shorReadsCounter - 1) {
+		if (num_of_short_reads != 0)index_of_sub_dna += sign_flag * ((rand() % (subSequenceLength - delim)) + delim);
+		if (index_of_sub_dna + subSequenceLength > fileLength - 1) { sign_flag = -1;  continue; }
+		if (index_of_sub_dna < 0) { sign_flag = 1;  continue; }
+		shortReads << fileDnaString.substr(index_of_sub_dna, subSequenceLength); shortReads << '\n';
+		shortReads << fileDnaString.substr(fileLength - (subSequenceLength + index_of_sub_dna), subSequenceLength); shortReads << '\n';
+		num_of_short_reads += 1;
 	}
+	shortReads << fileDnaString.substr(fileLength - subSequenceLength, subSequenceLength); shortReads << '\n';
+	//shortreads_container.push_back(fileDnaString.substr(fileLength - subSequenceLength, subSequenceLength));
 
 	shortReads.close();
 	dna.close();
@@ -316,10 +322,10 @@ int main() {
 	// 30 50 2 1000
 	int fileSize = 100000;
 	int subSequenceLength = 30;
-	int subSequenceCount = 4000;
+	int subSequenceCount =10000;
 	int snpCount = 2;
 	make_string_file(fileSize, "refDna.txt");
-	make_my_dna(subSequenceLength, subSequenceCount, 2, fileSize, "refDna.txt", "myDna.txt");
+	make_my_dna(subSequenceLength, subSequenceCount, snpCount, fileSize, "refDna.txt", "myDna.txt");
 	endo_nuclease(subSequenceLength, subSequenceCount, fileSize, "myDna.txt", "shortreads.txt");
 	import_short_reads("shortreads.txt");
 
