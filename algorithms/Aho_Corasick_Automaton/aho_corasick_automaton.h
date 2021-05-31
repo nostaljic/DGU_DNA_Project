@@ -14,12 +14,13 @@ vector<char> TWIG = { 'A','T','G','C' };
 vector<string> short_reads_container;
 vector<int> randomSeed = { 7,13,17,23 };
 
-
+int FIND = 0;
 class Component {
 public:
 	int length = 0;
 	char twig;
-	string shortread;
+	bool visited = false;
+	string shortread = "";
 	vector<Component*> arc;
 	Component* fail_arc;
 	Component() : twig('\0') { arc = {}; fail_arc = {}; }
@@ -30,7 +31,8 @@ public:
 		}
 		return nullptr;
 	}
-};
+}; 
+vector<Component*> finalStates;
 class automata {
 public:
 
@@ -54,6 +56,7 @@ public:
 				if (i == read_length - 1) {
 					newnode->shortread = short_read;
 					newnode->length = read_length;
+					finalStates.push_back(newnode);
 				}
 
 				temp->arc.push_back(newnode);
