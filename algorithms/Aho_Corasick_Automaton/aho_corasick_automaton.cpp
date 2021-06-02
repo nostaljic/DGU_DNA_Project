@@ -24,13 +24,15 @@ using namespace std;
 vector<char> TWIG = { 'A','T','G','C' };
 vector<string> short_reads_container;
 vector<int> randomSeed = { 7,13,17,23 };
+int FIND = 0;
 
 
 class Component {
 public:
 	int length = 0; 
 	char twig;
-	string shortread;
+	bool visited = false;
+	string shortread = "";
 	vector<Component*> arc;
 	Component* fail_arc;
 	Component() : twig('\0') { arc = {}; fail_arc = {}; }
@@ -42,6 +44,10 @@ public:
 		return nullptr;
 	}
 };
+
+vector<Component*> finalStates;  // final state ptr 모음
+
+
 class automata {
 public:
 
@@ -65,6 +71,7 @@ public:
 				if (i == read_length - 1) { 
 					newnode->shortread = short_read; 
 					newnode->length = read_length;
+					finalStates.push_back(newnode);
 				}
 
 				temp->arc.push_back(newnode);
@@ -200,6 +207,9 @@ void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength,
 			cout << "==============dfs change : " << ref[index + i] << "  "<< shortread[i] << endl;
 			ref[index + i] = shortread[i];
 		}
+		// 6.01 해당 shortread 방문
+		ptr->visited = true;
+		FIND++;
 		cout << "\n";
 		return;
 	}
@@ -279,6 +289,10 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
 					reconstructDNA[i + a] = find_shortread[a];
 				}
 				//	cout <<"mis_match : "<<mis_match<<" "<<position<< endl<<endl;
+				
+				// 6. 01 노드 방문
+				ptr->visited = true;
+				FIND++;
 				i += (subSequenceLength - 1); // break 이후 while문 나간 후 for문의 i++ 이후 i < fileLength - subSequenceLength test 하기 때문
 				break;
 			}
@@ -436,6 +450,7 @@ auto loadMyDna = [](string filename) {
 	return mydna;
 };
 
+
 int main() {
 	// 30 50 2 1000
 	make_string_file(1000000, "helloDna.txt");
@@ -473,6 +488,26 @@ int main() {
 
 	cout << "My DNA vs reconstruct" << endl;
 	reconstruct_precision(reconstruct, mydna);
+
+	int check = 0; int visited = 0;
+	for(auto &a : finalStates){
+		if (a->length != 30) {
+			cout << "ERROR발생 length : " << a->length << endl;
+		}
+		if (a->visited) visited++;
+		check++;
+	}
+	cout << "확인된 shortRead 개수 : " << check << endl;
+	cout << "총 방문한 shortRead 개수 : " << visited << endl;
+
+	int count = 0;
+	sort(short_reads_container.begin(), short_reads_container.end());
+	for (int i = 0; i < short_reads_container.size(); i++) {
+		if (short_reads_container[i] != short_reads_container[i + 1]) {
+			count++;
+		}
+	}
+	cout << "중복제외 shortRead 개수 : " << count <<  endl;
 
 	//a.print_node(a.root->arc[0]);
 
