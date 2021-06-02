@@ -56,6 +56,7 @@ public:
 				if (i == read_length - 1) {
 					newnode->shortread = short_read;
 					newnode->length = read_length;
+					//cout << finalStates.size() << endl;
 					finalStates.push_back(newnode);
 				}
 
