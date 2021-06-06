@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 #include <iostream>
 #include <random>
 #include <ctime>
@@ -65,7 +65,7 @@ public:
 				//cout << temp->twig << endl;
 			}
 			else if (ptr != nullptr) {
-				//cout << "Á¸ÀçÇÔ" << endl;
+				//cout << "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½" << endl;
 				temp = ptr;
 			}
 		}
@@ -76,10 +76,10 @@ public:
 		deque<Component*> deck = { temp };
 		while (!deck.empty()) {
 
-			Component* ptr = deck.front(); deck.pop_front(); //ºÎ¸ð³ëµå°áÁ¤
+			Component* ptr = deck.front(); deck.pop_front(); //ï¿½Î¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-			for (auto i : ptr->arc) { //ÀÚ½Ä³ëµå ¼øÈ¸
-				//#1 ÃÖÃÊ³ëµå·ÎºÎÅÍ ¿ÀÅä¸¶Å¸·Î ÀÎ½Ä ½ÇÆÐ ¹ß°ß½Ã ·çÆ®·Î µ¹¾Æ°£´Ù.
+			for (auto i : ptr->arc) { //ï¿½Ú½Ä³ï¿½ï¿½ ï¿½ï¿½È¸
+				//#1 ï¿½ï¿½ï¿½Ê³ï¿½ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ä¸¶Å¸ï¿½ï¿½ ï¿½Î½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ß½ï¿½ ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½Æ°ï¿½ï¿½ï¿½.
 				if (ptr == temp) {
 					ptr->fail_arc = temp;
 					for (auto i : ptr->arc) {
@@ -87,8 +87,8 @@ public:
 					}
 				}
 				else {
-					//#2 ºÎ¸ð³ëµåÀÇ ½ÇÆÐ¸µÅ©·Î ÀÌµ¿ÇÏ°í, ÀÚ½Ä Áß Á¢¹ÌºÎ°¡ °°Àº ¹®ÀÚÀÎ °ÍÀ» Ã£´Â´Ù.
-					// ¸ø Ã£À» °æ¿ì ÀÌµ¿µÈ ³ëµå¿¡¼­ÀÇ ½ÇÆÐ¸µÅ©·Î ÀÌµ¿ÇÑ´Ù.
+					//#2 ï¿½Î¸ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ð¸ï¿½Å©ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ï°ï¿½, ï¿½Ú½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ÌºÎ°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½Â´ï¿½.
+					// ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½å¿¡ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ð¸ï¿½Å©ï¿½ï¿½ ï¿½Ìµï¿½ï¿½Ñ´ï¿½.
 					Component* fail_moved = ptr->fail_arc;
 					Component* needtodecide;
 					do {
@@ -123,11 +123,11 @@ public:
 		cout << "index : " << temp->length << endl;
 		cout << "string : " << temp->shortread << "ShortRead Length : " << temp->shortread.length() << endl;
 		cout << "Twig :" << temp->twig << endl;
-		cout << "¿¬°áµÈ ³ëµå :";
+		cout << "ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ :";
 		for (auto i : temp->arc) {
 			cout << i->twig << " ";
 		}cout << endl;
-		cout << "½ÇÆÐ ¾ÆÅ© :";
+		cout << "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å© :";
 		cout << temp->fail_arc->twig << endl;
 
 

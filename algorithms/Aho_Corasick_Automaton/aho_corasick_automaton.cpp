@@ -73,7 +73,7 @@ void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength,
         // 6.01 해당 shortread 방문
         ptr->visited = true;
         FIND++;
-        //cout << "\n";
+        //  cout << "where : " <<current-subSequenceLength <<  "miscount : "<<mis_match<<"         "<< shortread<<"\n";
         return;
     }
 
@@ -95,9 +95,10 @@ void inter_DFS(Component* ptr, bool visited[], int start, int subSequenceLength,
             }
         }
 
+
         // #case 1 : not find && mis_match < snip_cout
         // #case 2 : find
-        if (visited[temp->length] == false) {
+        if (visited[temp->length + 1] == false) {
             //cout << "check in dfs : " << ref[current] << " " << temp->twig <<" "<< mis_match<< endl;
             inter_DFS(temp, visited, temp->length, subSequenceLength, ref, rec, current + 1, mis_match, snip_count, flag);
         }
@@ -154,6 +155,7 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
                 // 6. 01 노드 방문
                 ptr->visited = true;
                 FIND++;
+                //cout << "" << ref_index - subSequenceLength << "miscount : " << mis_match << "         " << find_shortread << "\n";
                 break;
             }
 
@@ -198,6 +200,7 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
                             jump = false;
                             mis_match = 0;
                             position = 0;
+                            break;
                         }
                     }
                     if (jump) {
@@ -209,6 +212,7 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
                 }
                 else {
                     // 내부 dfs shortread 탐색 성공
+                    break;
                 }
             }
             else {
@@ -228,6 +232,7 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
                         jump = false;
                         mis_match = 0;
                         position = 0;
+                        break;
                     }
                 }
                 if (jump) {
@@ -242,23 +247,23 @@ auto automaton_dna_reconstruction_v1 = [](int subSequenceLength, int snp_count, 
     reconstructed_dna << reconstructed;
     return reconstructed;
 };
-
 auto automaton_dna_reconstruction_v2 = [](int subSequenceLength, int snp_count, int fileLength, string refFilePath, string reconstructionFilePath, automata aca) {
+    //ofstream rec_rec_dna("after.txt");
 
     ifstream reconstructed_dna(reconstructionFilePath);
-    string reconstructed; 
+    string reconstructed;
     getline(reconstructed_dna, reconstructed);
     ifstream RefDna(refFilePath);
-    string refDNA; 
+    string refDNA;
     getline(RefDna, refDNA);
-    
-    
-    int mis_match = 0; // mis_match count
-    int position = 0; // reference에서 현재 확인하고 있는 DNA sequence 위치
-                // ex) i + position => i부터 시작하는 reference의 현재 보는 char 위치(=position)
+
+
+    int mis_match = 0;  // mis_match count
+    int position = 0;   // reference에서 현재 확인하고 있는 DNA sequence 위치
+                        // ex) i + position => i부터 시작하는 reference의 현재 보는 char 위치(=position)
 
     for (int ref_index = 0; ref_index < fileLength - subSequenceLength; ref_index++) {
-        if (reconstructed[ref_index] != '\0') { continue; }
+        if (reconstructed[ref_index] == ' ') { cout << ref_index << endl; continue; }
         Component* temp = aca.root;
         Component* ptr = nullptr;
         string find_shortread;
@@ -322,8 +327,6 @@ auto automaton_dna_reconstruction_v2 = [](int subSequenceLength, int snp_count, 
                 }
                 else {
                     // 내부 dfs shortread 탐색 성공
-                    ptr->visited = true;
-                    FIND++;
                     break;
                 }
             }
@@ -335,6 +338,7 @@ auto automaton_dna_reconstruction_v2 = [](int subSequenceLength, int snp_count, 
     // reconstruct 끝
     ofstream rec_rec_dna("after.txt");
     rec_rec_dna << reconstructed;
+    //cout << reconstructed << endl;
     rec_rec_dna.close();
 
 
@@ -371,6 +375,7 @@ auto make_string_file = [](int fileLength, string filePath) {
     dna << fileDnaString;
     dna.close();
 };
+
 auto make_my_dna = [](int subSequenceLength, int short_reads_count, int snp_count, int fileLength, string refDnaPath, string myDnaPath) {
 
     ifstream refDNA(refDnaPath);
@@ -408,7 +413,7 @@ auto endo_nuclease = [](int subSequenceLength, int shorReadsCounter, int fileLen
         if (index_of_sub_dna + subSequenceLength > fileLength - 1) { sign_flag = -1;  continue; }
         if (index_of_sub_dna < 0) { sign_flag = 1;  continue; }
         shortReads << fileDnaString.substr(index_of_sub_dna, subSequenceLength); shortReads << '\n';
-        shortReads << fileDnaString.substr(fileLength - (subSequenceLength + index_of_sub_dna), subSequenceLength); shortReads << '\n';
+        //shortReads << fileDnaString.substr(fileLength - (subSequenceLength + index_of_sub_dna), subSequenceLength); shortReads << '\n';
         num_of_short_reads += 1;
     }
     shortReads << fileDnaString.substr(fileLength - subSequenceLength, subSequenceLength); shortReads << '\n';
@@ -455,9 +460,9 @@ auto loadMyDna = [](string filename) {
 
 int main() {
     // 30 50 2 1000
-    int fileSize = 100000;
+    int fileSize = 1000000;
     int subSequenceLength = 64;
-    int subSequenceCount = 1000;
+    int subSequenceCount = 30000;
     int snpCount = 2;
     make_string_file(fileSize, "refDna.txt");
     make_my_dna(subSequenceLength, subSequenceCount, snpCount, fileSize, "refDna.txt", "myDna.txt");
@@ -484,11 +489,7 @@ int main() {
     reconstruct = automaton_dna_reconstruction_v1(subSequenceLength, snpCount, fileSize, "refDna.txt", "reconstruction.txt", ACA);
     reconstruct = automaton_dna_reconstruction_v2(subSequenceLength, snpCount, fileSize, "refDna.txt", "reconstruction.txt", ACA);
     mydna = loadMyDna("myDna.txt");
-    cout << "My DNA vs Reference" << endl;
-    reconstruct_precision(reference, mydna);
 
-    cout << "My DNA vs reconstruct" << endl;
-    reconstruct_precision(reconstruct, mydna);
 
     int check = 0; int visited = 0;
 
@@ -507,13 +508,16 @@ int main() {
 
     int count = 0;
     sort(short_reads_container.begin(), short_reads_container.end());
-    for (int i = 0; i < short_reads_container.size() - 1; i++) {
+    for (int i = 0; i < short_reads_container.size(); i++) {
         if (short_reads_container[i] != short_reads_container[i + 1]) {
             count++;
         }
     }
     cout << "중복제외 shortRead 개수 : " << count << endl;
+    cout << "My DNA vs Reference" << endl;
+    reconstruct_precision(reference, mydna);
 
-    //reconstruct_precision(reconstruct, mydna);
+    cout << "My DNA vs reconstruct" << endl;
+    reconstruct_precision(reconstruct, mydna);
     return 0;
 }
