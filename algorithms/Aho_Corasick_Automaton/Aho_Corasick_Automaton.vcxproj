@@ -141,6 +141,9 @@
   <ItemGroup>
     <ClCompile Include="aho_corasick_automaton.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="aho_corasick_automaton.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
